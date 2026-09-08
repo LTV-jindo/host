@@ -1,0 +1,7 @@
+Write-Host "================================"
+Write-Host "       JINDO HOST TEST"
+Write-Host "================================"
+Write-Host ""
+Write-Host "Hello from LTV-jindo/host!"
+Write-Host ""
+Read-Host "Press Enter to exit"
