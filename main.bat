@@ -527,12 +527,16 @@ if "!sysinput!"=="19" (
     echo [38;2;255;255;0m ============================
     echo     TEMPORARY FILE CLEANER
     echo  ============================
+    echo.
     echo Cleaning temporary files...
     echo.
 
     echo Cleaning user TEMP...
-    del /q /f "%TEMP%\*" >nul 2>&1
-    for /d %%D in ("%TEMP%\*") do rd /s /q "%%D" >nul 2>&1
+    for /f "delims=" %%F in ('dir /b /a-d "%TEMP%" 2^>nul') do (
+        if /I not "%%F"=="%~nx0" (
+            del /q /f "%TEMP%\%%F" >nul 2>&1
+        )
+    )
 
     echo Cleaning Windows TEMP...
     del /q /f "%windir%\Temp\*" >nul 2>&1
@@ -540,24 +544,11 @@ if "!sysinput!"=="19" (
 
     echo.
     echo Temporary files cleaned.
+    echo.
     pause
     cls
     goto sysmgr
 )
-if "!sysinput!"=="20" start "" eventvwr.msc
-if "!sysinput!"=="21" (
-    start "" ms-settings:storagesense
-    cls
-    goto sysmgr
-)
-if "!sysinput!"=="22" start "" powercfg.cpl
-if "!sysinput!"=="23" start "" ms-settings:network
-if "!sysinput!"=="24" (
-  cls
-  goto start
-)
-cls
-goto :sysmgr
 
 :version
 cls
