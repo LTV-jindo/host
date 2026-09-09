@@ -571,7 +571,7 @@ echo      VERSION ^& INFORMATION
 echo  ============================
 echo.
 echo.
-echo Multi-Tool v1.2.6
+echo Multi-Tool webver
 echo Jindo's devloper team Copyright ©
 echo.
 echo Thanks to:
@@ -815,7 +815,7 @@ echo [38;2;255;255;0m ============================
 echo         UPDATE CHECKER
 echo  ============================
 echo.
-echo Current version: v1.2.6
+echo Current version: v1.2.6 (web version)
 echo.
 echo Checking GitHub for the latest release...
 echo.
@@ -885,7 +885,7 @@ if !latestMajor! GTR !currentMajor! goto update_available
 if !latestMajor! EQU !currentMajor! if !latestMinor! GTR !currentMinor! goto update_available
 if !latestMajor! EQU !currentMajor! if !latestMinor! EQU !currentMinor! if !latestPatch! GTR !currentPatch! goto update_available
 
-echo You are using the latest version.
+echo You are using the latest version. (web version)
 echo.
 pause
 cls
@@ -894,7 +894,7 @@ goto start
 :update_available
 echo UPDATE AVAILABLE!
 echo.
-echo Current version: v1.2.5
+echo Current version: v1.2.6 (web version)
 echo Latest version:  v!latest!
 echo.
 choice /c YN /n /m "Open the GitHub release page? [Y/N] "
