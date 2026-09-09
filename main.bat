@@ -1,4 +1,7 @@
 @echo off
+(
+    echo [%date% %time%]
+) >> "%~dp0logs\log.log"
 setlocal EnableDelayedExpansion
 title MultiTool - by Ebola Man (upgrade version by Jindo)
 chcp 65001 >nul
@@ -75,24 +78,39 @@ if /I "!input!"=="hide" (
         echo.
         echo No path entered.
         pause
+        pushd files
         cls
         goto :start
     )
 
     if exist "!target!" (
         attrib +h +s +r "!target!"
+
+        if errorlevel 1 (
+            set "errorcommand=Hide"
+            set "errormessage=Failed to hide the selected file or folder."
+            set "errorcode=!errorlevel!"
+            pushd files
+            goto :errorhandler
+        )
+
         echo.
         echo Hidden successfully.
     ) else (
-        echo.
-        echo File or folder not found.
+        set "errorcommand=Hide"
+        set "errormessage=File or folder not found."
+        set "errorcode=1"
+        pushd files
+        goto :errorhandler
     )
 
     pause
+    pushd files
     cls
     goto :start
 )
-if /I "%input%"=="unhide" (
+
+if /I "!input!"=="unhide" (
     popd
 
     set "target="
@@ -103,19 +121,34 @@ if /I "%input%"=="unhide" (
         echo.
         echo No path entered.
         pause
+        pushd files
         cls
         goto :start
     )
 
     if exist "!target!" (
         attrib -h -s -r "!target!"
+
+        if errorlevel 1 (
+            set "errorcommand=Unhide"
+            set "errormessage=Failed to unhide the selected file or folder."
+            set "errorcode=!errorlevel!"
+            pushd files
+            goto :errorhandler
+        )
+
         echo.
         echo Unhidden successfully.
     ) else (
-        echo.
-        echo File or folder not found.
+        set "errorcommand=Unhide"
+        set "errormessage=File or folder not found."
+        set "errorcode=3"
+        pushd files
+        goto :errorhandler
     )
+
     pause
+    pushd files
     cls
     goto :start
 )
@@ -130,6 +163,7 @@ if /I "!input!"=="website" goto mainp
 if /I "!input!"=="update" goto :update
 if /I "!input!"=="process" goto :process
 if /I "!input!"=="folders" goto folder
+if /I "!input!"=="optimize" goto :optimize
 cls
 goto start
 
@@ -159,6 +193,7 @@ echo contact   - open the contact page of Multi-Tool
 echo update    - check if there is a newer udpate
 echo process   - search for selected running process
 echo folders   - quick folder launcher
+echo optimize-all - optimize for best performence
 echo.
 echo This script contains a devloper-only command
 echo It also need a secret code.
@@ -431,13 +466,22 @@ set /p "target=Enter the file path: "
     cls
     goto :start
 )
- if exist "!target!" (
+if exist "!target!" (
     echo.
-    echo launching "!target!"
+    echo Launching "!target!"
     start "" "!target!"
+
+    if errorlevel 1 (
+        set "errorcommand=File Launcher"
+        set "errormessage=Failed to launch the selected file."
+        set "errorcode=!errorlevel!"
+        goto errorhandler
+    )
 ) else (
-    echo File not found.
-    pause
+    set "errorcommand=File Launcher"
+    set "errormessage=The selected file was not found."
+    set "errorcode=1"
+    goto errorhandler
 )
 cls
 goto launchmenu
@@ -729,24 +773,61 @@ echo.
 
 echo RAM:
 where wmic >nul 2>&1
+where wmic >nul 2>&1
 if not errorlevel 1 (
     wmic OS get TotalVisibleMemorySize
+
+    if errorlevel 1 (
+        set "errorcommand=System Information"
+        set "errormessage=Failed to retrieve RAM information."
+        set "errorcode=1"
+        goto errorhandler
+    )
 ) else (
-    echo RAM unavailable on Windows 11 because without WMIC, the command can't work.
+    set "errorcommand=System Information"
+    set "errormessage=WMIC is not available, so RAM information cannot be retrieved."
+    set "errorcode=1"
+    goto errorhandler
 )
 echo.
 
 echo GPU:
 where wmic >nul 2>&1
+where wmic >nul 2>&1
 if not errorlevel 1 (
     wmic path win32_VideoController get name
+
+    if errorlevel 1 (
+        set "errorcommand=System Information"
+        set "errormessage=Failed to retrieve GPU information."
+        set "errorcode=1"
+        goto errorhandler
+    )
 ) else (
-    echo GPU information unavailable on Windows 11 because without WMIC, the command can't work.
+    set "errorcommand=System Information"
+    set "errormessage=WMIC is not available, so GPU information cannot be retrieved."
+    set "errorcode=1"
+    goto errorhandler
 )
 echo.
 
 echo System Drive:
-wmic logicaldisk where "DeviceID='C:'" get Size,FreeSpace
+where wmic >nul 2>&1
+if not errorlevel 1 (
+    wmic logicaldisk where "DeviceID='C:'" get Size,FreeSpace
+
+    if errorlevel 1 (
+        set "errorcommand=System Information"
+        set "errormessage=Failed to retrieve system drive information."
+        set "errorcode=1"
+        goto errorhandler
+    )
+) else (
+    set "errorcommand=System Information"
+    set "errormessage=WMIC is not available, so system drive information cannot be retrieved."
+    set "errorcode=1"
+    goto errorhandler
+)
 echo.
 
 echo IPv4 Address:
@@ -815,7 +896,7 @@ echo [38;2;255;255;0m ============================
 echo         UPDATE CHECKER
 echo  ============================
 echo.
-echo Current version: v1.2.6 (web version)
+echo Current version: v1.2.7 (web version)
 echo.
 echo Checking GitHub for the latest release...
 echo.
@@ -869,7 +950,7 @@ if /I "!latest!"=="!latest_url!" (
 echo Latest version: v!latest!
 echo.
 
-for /f "tokens=1-3 delims=." %%A in ("1.2.6") do (
+for /f "tokens=1-3 delims=." %%A in ("1.2.7") do (
     set /a currentMajor=%%A
     set /a currentMinor=%%B
     set /a currentPatch=%%C
@@ -894,7 +975,7 @@ goto start
 :update_available
 echo UPDATE AVAILABLE!
 echo.
-echo Current version: v1.2.6 (web version)
+echo Current version: v1.2.7 (web version)
 echo Latest version:  v!latest!
 echo.
 choice /c YN /n /m "Open the GitHub release page? [Y/N] "
@@ -958,6 +1039,13 @@ echo Searching for: !processname!
 echo.
 
 tasklist /FI "IMAGENAME eq !processname!" /FO TABLE /NH
+
+if errorlevel 1 (
+    set "errorcommand=Process Search"
+    set "errormessage=Failed to search for the selected process."
+    set "errorcode=!errorlevel!"
+    goto errorhandler
+)
 
 echo.
 pause
@@ -1033,12 +1121,10 @@ rem ============================
 rem     Normal folder path
 rem ============================
 if not exist "!folderpath!\." (
-    echo.
-    echo ERROR: Folder does not exist.
-    echo.
-    pause
-    cls
-    goto start
+    set "errorcommand=Quick Folder Launcher"
+    set "errormessage=The specified folder does not exist."
+    set "errorcode=3"
+    goto errorhandler
 )
 
 :folder_open
@@ -1049,6 +1135,178 @@ start "" explorer.exe "!folderpath!"
 
 echo.
 echo Folder opened.
+pause
+cls
+goto start
+
+:fileinfo
+cls
+echo [38;2;255;255;0m==============================
+echo          FILE INFORMATION
+echo ==============================
+echo.
+
+set "target="
+set /p "target=Enter the file path: "
+
+if not defined target (
+    set "errorcommand=File Information"
+    set "errormessage=No file path was entered."
+    set "errorcode=1"
+    goto :errorhandler
+)
+
+if not exist "!target!" (
+    set "errorcommand=File Information"
+    set "errormessage=The specified file was not found."
+    set "errorcode=1"
+    goto :errorhandler
+)
+
+for %%F in ("!target!") do (
+    echo.
+    echo Name       : %%~nxF
+    echo Full Path  : %%~fF
+    echo Extension  : %%~xF
+    echo Size       : %%~zF bytes
+)
+
+echo.
+echo Attributes :
+attrib "!target!"
+
+echo.
+echo Created    :
+for /f "tokens=1,2" %%A in ('dir /T:C /-C "!target!" ^| findstr /R "[0-9]"') do (
+    echo %%A %%B
+    goto :fileinfo_modified
+)
+
+:fileinfo_modified
+echo.
+echo Modified   :
+for /f "tokens=1,2" %%A in ('dir /T:W /-C "!target!" ^| findstr /R "[0-9]"') do (
+    echo %%A %%B
+    goto :fileinfo_end
+)
+
+:fileinfo_end
+echo.
+pause
+cls
+goto :start
+
+:optimize
+cls
+echo [38;2;255;255;0m========================================
+echo       OPTIMIZE FOR PERFORMANCE
+echo ========================================
+echo.
+echo Preparing optimization...
+echo.
+
+REM Check for Administrator privileges
+net session >nul 2>&1
+if errorlevel 1 (
+    set "errorcommand=optimize-all"
+    set "errormessage=[38;2;255;0;0mAdministrator privileges missing."
+    set "errorcode=5"
+    goto :errorhandler
+)
+
+echo [38;2;0;255;0m[1/4] Cleaning user temporary files...
+
+del /f /s /q "%TEMP%\*" >nul 2>&1
+
+echo Done.
+echo.
+
+echo [38;2;0;255;0m[2/4] Cleaning Windows temporary files...
+
+del /f /s /q "%SystemRoot%\Temp\*" >nul 2>&1
+
+echo Done.
+echo.
+
+echo [38;2;0;255;0m[3/4] Running Windows component cleanup...
+
+DISM /Online /Cleanup-Image /StartComponentCleanup
+
+if errorlevel 1 (
+    set "errorcommand=optimize-all"
+    set "errormessage=[38;2;255;0;0mComponent cleanup encountered an error."
+    set "errorcode=5"
+    goto :errorhandler
+) else (
+    echo.
+    echo Component cleanup completed.
+)
+
+echo.
+
+echo [38;2;0;255;0m[4/4] Optimizing system drive...
+
+defrag C: /O /U /V
+
+if errorlevel 1 (
+    set "errorcommand=optimize-all"
+    set "errormessage=[38;2;255;0;0mDrive optimization encountered an error."
+    set "errorcode=5"
+    goto :errorhandler
+) else (
+    echo.
+    echo Drive optimization completed.
+)
+
+echo.
+cls
+echo [38;2;0;255;0m========================================
+echo        OPTIMIZATION COMPLETE
+echo ========================================
+echo.
+echo Temporary files cleaned.
+echo Windows components cleaned.
+echo System drive optimized.
+echo.
+pause
+cls
+goto :start
+
+:errorhandler
+cls
+echo [38;2;255;0;0m========================================
+echo            MULTITOOL ERROR
+echo ========================================
+echo.
+echo Something went wrong.
+echo.
+echo Command:
+echo   !errorcommand!
+echo.
+echo Error code:
+echo   !errorcode!
+echo.
+echo Error:
+echo   !errormessage!
+echo.
+echo The error has been saved to:
+echo   %~dp0logs\error.log
+echo.
+
+(
+    echo ========================================
+    echo MultiTool Error
+    echo ========================================
+    echo Time: %date% %time%
+    echo Command: !errorcommand!
+    echo Error code: !errorcode!
+    echo Error: !errormessage!
+    echo Computer: %COMPUTERNAME%
+    echo User: %USERNAME%
+    echo ========================================
+    echo.
+) >> "%~dp0logs\error.log"
+
 pause
 cls
 goto start
