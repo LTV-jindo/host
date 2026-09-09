@@ -1216,7 +1216,11 @@ if errorlevel 1 (
 
 echo [38;2;0;255;0m[1/4] Cleaning user temporary files...
 
-del /f /s /q "%TEMP%\*" >nul 2>&1
+for /f "delims=" %%F in ('dir /b /a-d "%TEMP%" 2^>nul') do (
+    if /I not "%%F"=="%~nx0" (
+        del /q /f "%TEMP%\%%F" >nul 2>&1
+    )
+)
 
 echo Done.
 echo.
