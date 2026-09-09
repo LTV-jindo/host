@@ -2,7 +2,6 @@
 setlocal EnableDelayedExpansion
 title MultiTool - by Ebola Man (upgrade version by Jindo)
 chcp 65001 >nul
-pushd "%~dp0files"
 :start
 call :banner
 
@@ -19,10 +18,25 @@ echo [38;2;255;255;0m         ║[0m
 echo [38;2;255;255;0m         ║[0m  
 set "input="
 set /p "input=.%BS% [38;2;255;255;0m        ╚══════>[0m  
-if /I "!input!"=="1" start "" "%~dp0files\si.lnk"
-if /I "!input!"=="2" start uh.exe
+if /I "!input!"=="1" (
+  echo The web version doesn't support this. please download the full app instead.
+  pause
+  cls
+  goto start
+)
+if /I "!input!"=="2" (
+  echo The web version doesn't support this. please download the full app instead.
+  pause
+  cls
+  goto start
+)
 if /I "!input!"=="3" exit
-if /I "!input!"=="0973505373" start secret
+if /I "!input!"=="0973505373" (
+  echo The web version doesn't support this. please download the full app instead.
+  pause
+  cls
+  goto start
+)
 if /I "!input!"=="restart" (
     echo Are you sure you want to shut down the PC?
     choice /c yn /n /m "[Y/N]> "
@@ -129,8 +143,8 @@ echo [38;2;255;255;0m ==============================
 echo            COMMANDS
 echo  ==============================
 echo [38;2;255;255;0mAvailable commands:
-echo 1         - System Informer
-echo 2         - Personal Password Generator
+echo 1         - System Informer (doesn't support on web version)
+echo 2         - Personal Password Generator (doesn't support on web version)
 echo 3         - Exit
 echo restart   - Restart the PC
 echo shutdown  - Shut down the PC
@@ -439,7 +453,7 @@ echo        SYSTEM MANAGER 3.0
 echo  ==============================
 echo.
 echo (1) System Information
-echo (2) Task Manager (system informer)
+echo (2) Task Manager
 echo (3) Services
 echo (4) Startup Apps
 echo (5) Disk Management
@@ -467,7 +481,7 @@ echo (24) Back
 set "sysinput="
 set /p "sysinput=> "
 if "!sysinput!"=="1" goto sysinfo
-if "!sysinput!"=="2" start si.lnk
+if "!sysinput!"=="2" start "" taskmgr.exe
 if "!sysinput!"=="3" start "" services.msc
 if "!sysinput!"=="4" (
   echo Seting startup app?
@@ -556,7 +570,7 @@ echo      VERSION ^& INFORMATION
 echo  ============================
 echo.
 echo.
-echo Multi-Tool v1.2.5
+echo Multi-Tool v1.2.6
 echo Jindo's devloper team Copyright ©
 echo.
 echo Thanks to:
