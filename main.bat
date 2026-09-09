@@ -1,7 +1,7 @@
 @echo off
 (
     echo [%date% %time%]
-) >> "%~dp0logs\log.log"
+) >> "%~dp0log.log"
 setlocal EnableDelayedExpansion
 title MultiTool - by Ebola Man (upgrade version by Jindo)
 chcp 65001 >nul
@@ -1305,7 +1305,7 @@ echo.
     echo User: %USERNAME%
     echo ========================================
     echo.
-) >> "%~dp0logs\error.log"
+) >> "%~dp0error.log"
 
 pause
 cls
