@@ -75,7 +75,6 @@ if /I "!input!"=="hide" (
         echo.
         echo No path entered.
         pause
-        pushd files
         cls
         goto :start
     )
@@ -90,7 +89,6 @@ if /I "!input!"=="hide" (
     )
 
     pause
-    pushd files
     cls
     goto :start
 )
@@ -105,7 +103,6 @@ if /I "%input%"=="unhide" (
         echo.
         echo No path entered.
         pause
-        pushd files
         cls
         goto :start
     )
@@ -119,7 +116,6 @@ if /I "%input%"=="unhide" (
         echo File or folder not found.
     )
     pause
-    pushd files
     cls
     goto :start
 )
