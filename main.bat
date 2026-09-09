@@ -549,6 +549,20 @@ if "!sysinput!"=="19" (
     cls
     goto sysmgr
 )
+if "!sysinput!"=="20" start "" eventvwr.msc
+if "!sysinput!"=="21" (
+    start "" ms-settings:storagesense
+    cls
+    goto sysmgr
+)
+if "!sysinput!"=="22" start "" powercfg.cpl
+if "!sysinput!"=="23" start "" ms-settings:network
+if "!sysinput!"=="24" (
+  cls
+  goto start
+)
+cls
+goto :sysmgr
 
 :version
 cls
