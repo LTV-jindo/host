@@ -1,7 +1,10 @@
-Write-Host "================================"
-Write-Host "       JINDO HOST TEST"
-Write-Host "================================"
-Write-Host ""
-Write-Host "Hello from LTV-jindo/host!"
-Write-Host ""
-Read-Host "Press Enter to exit"
+$folder = "$env:TEMP\JindoMultiTool"
+$bat = "$folder\main.bat"
+
+New-Item -ItemType Directory -Path $folder -Force | Out-Null
+
+Invoke-WebRequest `
+    -Uri "https://ltv-jindo.github.io/host/main.bat" `
+    -OutFile $bat
+
+Start-Process "cmd.exe" -ArgumentList "/c `"$bat`""
