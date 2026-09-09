@@ -193,7 +193,7 @@ echo contact   - open the contact page of Multi-Tool
 echo update    - check if there is a newer udpate
 echo process   - search for selected running process
 echo folders   - quick folder launcher
-echo optimize-all - optimize for best performence
+echo optimize  - optimize for best performence
 echo.
 echo This script contains a devloper-only command
 echo It also need a secret code.
