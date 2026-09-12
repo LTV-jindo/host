@@ -1,9 +1,14 @@
 @echo off
-(
-    echo [%date% %time%]
-) >> "%~dp0log.log"
+if not exist "%~dp0logs" mkdir "%~dp0logs"
+net session >nul 2>&1
+
+if not errorlevel 1 (
+    echo [%date% %time%] (administrator) >> "%~dp0logs\log.log"
+) else (
+    echo [%date% %time%] (standard user) >> "%~dp0logs\log.log"
+)
 setlocal EnableDelayedExpansion
-title MultiTool - by Ebola Man (upgrade version by Jindo)
+title MultiTool - by Ebola Man (upgrade version by Jindo web version)
 chcp 65001 >nul
 :start
 call :banner
@@ -163,6 +168,7 @@ if /I "!input!"=="website" goto mainp
 if /I "!input!"=="update" goto :update
 if /I "!input!"=="process" goto :process
 if /I "!input!"=="folders" goto folder
+if /I "!input!"=="fileinfo" goto fileinfo
 if /I "!input!"=="optimize" goto :optimize
 cls
 goto start
@@ -193,6 +199,7 @@ echo contact   - open the contact page of Multi-Tool
 echo update    - check if there is a newer udpate
 echo process   - search for selected running process
 echo folders   - quick folder launcher
+echo fileinfo  - show file information such as file/folder name,... ^(this command only available on web version^)
 echo optimize  - optimize for best performence
 echo.
 echo This script contains a devloper-only command
@@ -896,7 +903,7 @@ echo [38;2;255;255;0m ============================
 echo         UPDATE CHECKER
 echo  ============================
 echo.
-echo Current version: v1.2.7 (web version)
+echo Current version: v1.3.1 (web version)
 echo.
 echo Checking GitHub for the latest release...
 echo.
@@ -950,7 +957,7 @@ if /I "!latest!"=="!latest_url!" (
 echo Latest version: v!latest!
 echo.
 
-for /f "tokens=1-3 delims=." %%A in ("1.2.7") do (
+for /f "tokens=1-3 delims=." %%A in ("1.3.1") do (
     set /a currentMajor=%%A
     set /a currentMinor=%%B
     set /a currentPatch=%%C
@@ -975,7 +982,7 @@ goto start
 :update_available
 echo UPDATE AVAILABLE!
 echo.
-echo Current version: v1.2.7 (web version)
+echo Current version: v1.3.1 (web version)
 echo Latest version:  v!latest!
 echo.
 choice /c YN /n /m "Open the GitHub release page? [Y/N] "
@@ -1141,13 +1148,46 @@ goto start
 
 :fileinfo
 cls
-echo [38;2;255;255;0m==============================
-echo          FILE INFORMATION
-echo ==============================
+
+set "msgboxfile=%~dp0files\msgbox.vbs"
+
+echo Enter password before using the command
+set /p "pws1=> "
+
+if "!pws1!"=="iloveyou" (
+    echo Enter second password
+    set /p "pws2=> "
+
+    if "!pws2!"=="jindo_tm" (
+        cls
+        goto true_fileinfo
+
+    ) else (
+        echo x=msgbox("wrong password, you're not suppose to run this command" ,0, "get out") > "!msgboxfile!"
+        start "" wscript.exe "!msgboxfile!"
+        timeout /t 5 /nobreak >nul
+        del /q "!msgboxfile!"
+        pause
+        exit
+    )
+
+) else (
+    echo x=msgbox("wrong password, you're not suppose to run this command" ,0, "get out") > "!msgboxfile!"
+    start "" wscript.exe "!msgboxfile!"
+    timeout /t 5 /nobreak >nul
+    del /q "!msgboxfile!"
+    pause
+    exit
+)
+
+:true_fileinfo
+echo [38;2;255;255;0m ==============================
+echo         FILE INFORMATION
+echo  ==============================
 echo.
 
 set "target="
-set /p "target=Enter the file path: "
+set /p "target=Enter the file/folder path: "
 
 if not defined target (
     set "errorcommand=File Information"
@@ -1163,12 +1203,36 @@ if not exist "!target!" (
     goto :errorhandler
 )
 
-for %%F in ("!target!") do (
+if exist "!target!\*" (
+    REM =========================
+    REM Folder
+    REM =========================
+
+    set "totalsize=0"
+
+    for /f "tokens=3" %%A in ('dir /s /-c /a-d "!target!" 2^>nul ^| findstr /C:"File(s)"') do (
+        set "totalsize=%%A"
+    )
+
     echo.
-    echo Name       : %%~nxF
-    echo Full Path  : %%~fF
-    echo Extension  : %%~xF
-    echo Size       : %%~zF bytes
+    echo Name       : !target!
+    echo Full Path  : !target!
+    echo Type       : Folder
+    echo Size       : !totalsize! bytes
+
+) else (
+    REM =========================
+    REM File
+    REM =========================
+
+    for %%F in ("!target!") do (
+        echo.
+        echo Name       : %%~nxF
+        echo Full Path  : %%~fF
+        echo Extension  : %%~xF
+        echo Type       : File
+        echo Size       : %%~zF bytes
+    )
 )
 
 echo.
@@ -1194,7 +1258,7 @@ for /f "tokens=1,2" %%A in ('dir /T:W /-C "!target!" ^| findstr /R "[0-9]"') do 
 echo.
 pause
 cls
-goto :start
+goto start
 
 :optimize
 cls
@@ -1309,8 +1373,22 @@ echo.
     echo User: %USERNAME%
     echo ========================================
     echo.
-) >> "%~dp0error.log"
+) >> "%~dp0logs\error.log"
+echo Do you want to go to logs?
+choice /c yn /n /m "[Y/N]> "
 
+if errorlevel 2 (
+    cls
+    goto start
+)
+
+if errorlevel 1 (
+    echo Opening logs...
+    start "" "%~dp0logs\error.log"
+    pause
+    cls
+    goto start
+)
 pause
 cls
 goto start
