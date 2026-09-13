@@ -1349,14 +1349,16 @@ if errorlevel 1 (
 
 echo [38;2;0;255;0m[1/4] Cleaning user temporary files...
 
-del /f /s /q "%TEMP%\*" >nul 2>&1
+del /q /f "%TEMP%\*" >nul 2>&1
+for /d %%D in ("%TEMP%\*") do rd /s /q "%%D" >nul 2>&1
 
 echo Done.
 echo.
 
 echo [38;2;0;255;0m[2/4] Cleaning Windows temporary files...
 
-del /f /s /q "%SystemRoot%\Temp\*" >nul 2>&1
+del /q /f "%windir%\Temp\*" >nul 2>&1
+for /d %%D in ("%windir%\Temp\*") do rd /s /q "%%D" >nul 2>&1
 
 echo Done.
 echo.
