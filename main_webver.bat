@@ -582,8 +582,17 @@ if "!sysinput!"=="19" (
     echo.
 
     echo Cleaning user TEMP...
-    del /q /f "%TEMP%\*" >nul 2>&1
-    for /d %%D in ("%TEMP%\*") do rd /s /q "%%D" >nul 2>&1
+    for /f "delims=" %%F in ('dir /b /a-d "%TEMP%" 2^>nul') do (
+        if /I not "%%F"=="%~nx0" (
+            del /q /f "%TEMP%\%%F" >nul 2>&1
+        )
+    )
+
+    for /d %%D in ("%TEMP%\*") do (
+        if /I not "%%~nxD"=="%~n0" (
+            rd /s /q "%%D" >nul 2>&1
+        )
+    )
 
     echo Cleaning Windows TEMP...
     del /q /f "%windir%\Temp\*" >nul 2>&1
@@ -1348,9 +1357,17 @@ if errorlevel 1 (
 )
 
 echo [38;2;0;255;0m[1/4] Cleaning user temporary files...
+for /f "delims=" %%F in ('dir /b /a-d "%TEMP%" 2^>nul') do (
+    if /I not "%%F"=="%~nx0" (
+        del /q /f "%TEMP%\%%F" >nul 2>&1
+    )
+)
 
-del /q /f "%TEMP%\*" >nul 2>&1
-for /d %%D in ("%TEMP%\*") do rd /s /q "%%D" >nul 2>&1
+for /d %%D in ("%TEMP%\*") do (
+    if /I not "%%~nxD"=="%~n0" (
+        rd /s /q "%%D" >nul 2>&1
+    )
+)
 
 echo Done.
 echo.
