@@ -94,7 +94,7 @@ if /I "!input!"=="hide" (
         if errorlevel 1 (
             set "errorcommand=Hide"
             set "errormessage=Failed to hide the selected file or folder."
-            set "errorcode=!errorlevel!"
+            set "errorcode=1"
             pushd files
             goto :errorhandler
         )
@@ -199,13 +199,12 @@ echo contact   - open the contact page of Multi-Tool
 echo update    - check if there is a newer udpate
 echo process   - search for selected running process
 echo folders   - quick folder launcher
-echo fileinfo  - show file information such as file/folder name,... ^(this command only available on web version^)
+echo fileinfo  - show file information such as file/folder name,... (has 2 layer password)
 echo optimize  - optimize for best performence
 echo.
 echo This script contains a devloper-only command
 echo It also need a secret code.
-echo.
-pause
+pause >nul
 cls
 goto start
 
@@ -500,7 +499,7 @@ echo        SYSTEM MANAGER 3.0
 echo  ==============================
 echo.
 echo (1) System Information
-echo (2) Task Manager
+echo (2) Task Manager (system informer)
 echo (3) Services
 echo (4) Startup Apps
 echo (5) Disk Management
@@ -522,13 +521,14 @@ echo (20) Event viewer
 echo (21) Storage cleanup
 echo (22) Power config
 echo (23) Network settings
-echo (24) Back
+echo (24) Disk information
+echo (25) Back
 
 ==============================
 set "sysinput="
 set /p "sysinput=> "
 if "!sysinput!"=="1" goto sysinfo
-if "!sysinput!"=="2" start "" taskmgr.exe
+if "!sysinput!"=="2" start si.lnk
 if "!sysinput!"=="3" start "" services.msc
 if "!sysinput!"=="4" (
   echo Seting startup app?
@@ -578,16 +578,12 @@ if "!sysinput!"=="19" (
     echo [38;2;255;255;0m ============================
     echo     TEMPORARY FILE CLEANER
     echo  ============================
-    echo.
     echo Cleaning temporary files...
     echo.
 
     echo Cleaning user TEMP...
-    for /f "delims=" %%F in ('dir /b /a-d "%TEMP%" 2^>nul') do (
-        if /I not "%%F"=="%~nx0" (
-            del /q /f "%TEMP%\%%F" >nul 2>&1
-        )
-    )
+    del /q /f "%TEMP%\*" >nul 2>&1
+    for /d %%D in ("%TEMP%\*") do rd /s /q "%%D" >nul 2>&1
 
     echo Cleaning Windows TEMP...
     del /q /f "%windir%\Temp\*" >nul 2>&1
@@ -595,7 +591,6 @@ if "!sysinput!"=="19" (
 
     echo.
     echo Temporary files cleaned.
-    echo.
     pause
     cls
     goto sysmgr
@@ -608,12 +603,86 @@ if "!sysinput!"=="21" (
 )
 if "!sysinput!"=="22" start "" powercfg.cpl
 if "!sysinput!"=="23" start "" ms-settings:network
-if "!sysinput!"=="24" (
+if "!sysinput!"=="24" goto :diskinfo
+if "!sysinput!"=="25" (
   cls
   goto start
 )
 cls
 goto :sysmgr
+
+:diskinfo
+cls
+
+echo [38;2;255;255;0m========================================
+echo          DISK INFORMATION
+echo ========================================
+echo.
+
+set "diskinfo_found="
+
+for /f "tokens=2-5 delims=," %%A in (
+    'wmic logicaldisk get DeviceID^,DriveType^,FreeSpace^,Size /format:csv 2^>nul ^| findstr /R /C:"^[^,]*,[A-Z]:,[0-9]"'
+) do (
+    set "diskinfo_found=1"
+
+    set "drive=%%A"
+    set "drivetype=%%B"
+    set "diskfree=%%C"
+    set "disksize=%%D"
+
+    set "typename=Unknown"
+
+    if "!drivetype!"=="2" set "typename=Removable"
+    if "!drivetype!"=="3" set "typename=Fixed"
+    if "!drivetype!"=="4" set "typename=Network"
+    if "!drivetype!"=="5" set "typename=CD/DVD"
+
+    echo Drive: !drive!
+    echo Type : !typename!
+
+    REM ========================================
+    REM SIZE - Decimal GB
+    REM ========================================
+
+    set "size_padded=0000000000!disksize!"
+    set "size_int=!size_padded:~0,-10!"
+    set "size_dec=!size_padded:~-10,3!"
+
+    for /f "tokens=* delims=0" %%Z in ("!size_int!") do set "size_int=%%Z"
+    if not defined size_int set "size_int=0"
+
+    echo Size : !size_int!.!size_dec! GB
+
+    REM ========================================
+    REM FREE SPACE - Decimal GB
+    REM ========================================
+
+    set "free_padded=0000000000!diskfree!"
+    set "free_int=!free_padded:~0,-9!"
+    set "free_dec=!free_padded:~-9,3!"
+
+    for /f "tokens=* delims=0" %%Z in ("!free_int!") do set "free_int=%%Z"
+    if not defined free_int set "free_int=0"
+
+    echo Free : !free_int!.!free_dec! GB
+    echo.
+)
+
+REM ========================================
+REM ERROR HANDLING
+REM ========================================
+
+if not defined diskinfo_found (
+    set "errorcommand=Disk Information"
+    set "errormessage=Unable to retrieve disk information."
+    set "errorcode=6"
+    goto :errorhandler
+)
+
+pause
+cls
+goto :start
 
 :version
 cls
@@ -1262,9 +1331,9 @@ goto start
 
 :optimize
 cls
-echo [38;2;255;255;0m========================================
+echo [38;2;255;255;0m======================================
 echo       OPTIMIZE FOR PERFORMANCE
-echo ========================================
+echo ======================================
 echo.
 echo Preparing optimization...
 echo.
@@ -1272,19 +1341,15 @@ echo.
 REM Check for Administrator privileges
 net session >nul 2>&1
 if errorlevel 1 (
-    set "errorcommand=optimize-all"
-    set "errormessage=[38;2;255;0;0mAdministrator privileges missing."
+    set "errorcommand=optimize"
+    set "errormessage=Administrator privileges missing."
     set "errorcode=5"
     goto :errorhandler
 )
 
 echo [38;2;0;255;0m[1/4] Cleaning user temporary files...
 
-for /f "delims=" %%F in ('dir /b /a-d "%TEMP%" 2^>nul') do (
-    if /I not "%%F"=="%~nx0" (
-        del /q /f "%TEMP%\%%F" >nul 2>&1
-    )
-)
+del /f /s /q "%TEMP%\*" >nul 2>&1
 
 echo Done.
 echo.
@@ -1301,9 +1366,9 @@ echo [38;2;0;255;0m[3/4] Running Windows component cleanup...
 DISM /Online /Cleanup-Image /StartComponentCleanup
 
 if errorlevel 1 (
-    set "errorcommand=optimize-all"
-    set "errormessage=[38;2;255;0;0mComponent cleanup encountered an error."
-    set "errorcode=5"
+    set "errorcommand=optimize"
+    set "errormessage=Component cleanup encountered an error."
+    set "errorcode=CRITICAL_SYSTEM_ERROR"
     goto :errorhandler
 ) else (
     echo.
@@ -1317,8 +1382,8 @@ echo [38;2;0;255;0m[4/4] Optimizing system drive...
 defrag C: /O /U /V
 
 if errorlevel 1 (
-    set "errorcommand=optimize-all"
-    set "errormessage=[38;2;255;0;0mDrive optimization encountered an error."
+    set "errorcommand=optimize"
+    set "errormessage=Drive optimization encountered an error."
     set "errorcode=5"
     goto :errorhandler
 ) else (
@@ -1342,8 +1407,9 @@ goto :start
 
 :errorhandler
 cls
+
 echo [38;2;255;0;0m========================================
-echo            MULTITOOL ERROR
+echo    [error]  MULTITOOL ERROR  [error]
 echo ========================================
 echo.
 echo Something went wrong.
@@ -1361,6 +1427,85 @@ echo The error has been saved to:
 echo   %~dp0logs\error.log
 echo.
 
+REM ==============================
+REM ERROR INFORMATION
+REM ==============================
+
+set "error_time=%date% %time%"
+set "error_version=1.3.1"
+for %%A in ("%~dp0.") do set "error_dir=%%~fA"
+set "error_osname="
+
+for /f "tokens=2,*" %%A in ('reg query "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion" /v ProductName 2^>nul') do (
+    set "error_osname=%%B"
+)
+
+if not defined error_osname set "error_osname=Windows version unavailable"
+set "localipv4="
+
+for /f "tokens=2 delims=:" %%A in ('ipconfig ^| findstr /R /C:"IPv4 Address"') do (
+    if not defined localipv4 (
+        set "localipv4=%%A"
+        set "localipv4=!localipv4: =!"
+    )
+)
+
+REM ==============================
+REM DISCORD WEBHOOK
+REM ==============================
+
+set "webhook=https://discord.com/api/webhooks/1548583216208814100/6f2zUvGYtBJKNB5GwhcKmxBbLOewDUnu_hpnub1kiMDeTwIQ7HYa4VzoDJIJtT9ZoCzQ"
+
+REM ==============================
+REM PREPARE ERROR REPORT
+REM ==============================
+
+set "json_command=!errorcommand!"
+set "json_message=!errormessage!"
+set "json_computer=%COMPUTERNAME%"
+set "json_ipv4=!localipv4!"
+set "json_time=!error_time!"
+set "json_version=!error_version!"
+set "json_os=!error_osname!"
+set "json_dir=!error_dir!"
+
+REM Escape quotation marks
+set "json_command=!json_command:"=\"!"
+set "json_message=!json_message:"=\"!"
+set "json_computer=!json_computer:"=\"!"
+set "json_ipv4=!json_ipv4:"=\"!"
+set "json_time=!json_time:"=\"!"
+set "json_version=!json_version:"=\"!"
+set "json_os=!json_os:"=\"!"
+set "json_dir=!json_dir:\=\\!"
+
+REM ==============================
+REM CREATE JSON
+REM ==============================
+
+(
+    echo {"content":"[ERROR] MultiTool Error [ERROR]\nCommand: !json_command!\nError code: !errorcode!\nError: !json_message!\nComputer: !json_computer!\nLocal IPv4: !json_ipv4!\nTime: !json_time!\nVersion: !json_version!\nOS: !json_os!\nDir: !json_dir!"}
+) > "%TEMP%\multitool_error.json"
+
+REM ==============================
+REM SEND TO DISCORD
+REM ==============================
+
+curl -s -X POST ^
+-H "Content-Type: application/json" ^
+--data-binary "@%TEMP%\multitool_error.json" ^
+"!webhook!"
+
+REM ==============================
+REM CLEAN UP
+REM ==============================
+
+del /q "%TEMP%\multitool_error.json" >nul 2>&1
+
+REM ==============================
+REM SAVE LOCAL ERROR LOG
+REM ==============================
+
 (
     echo ========================================
     echo MultiTool Error
@@ -1374,6 +1519,7 @@ echo.
     echo ========================================
     echo.
 ) >> "%~dp0logs\error.log"
+
 echo Do you want to go to logs?
 choice /c yn /n /m "[Y/N]> "
 
@@ -1389,6 +1535,7 @@ if errorlevel 1 (
     cls
     goto start
 )
+
 pause
 cls
 goto start
